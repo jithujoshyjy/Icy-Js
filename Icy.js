@@ -602,17 +602,35 @@ both_op1_op2_obj(op1, op2) {
 }
  function I(expression) {
  let Stack = {
-	operands: [];
-	operators: [];
-	evaluation() {
-		let operators = ["+", "-"];
-		for(let ex of expression)
-			for(let op of operators)
-				if(ex === op) {
-					this.operators.push(op);
-					this.operands.push(expression.split(op).toString());
-					}
+	opors: {"+":1,"-":1,"/":2,"*":2,"(":0},
+	operands: [],
+	operators: [],
+	expression: "",
+	evalexp(exp) {
+		Stack.expression = "";
+	for(let i = 0; i < exp.length; i++) {
+		if(Object.keys(Stack.opors).includes(exp[i]) && Stack.operators.length === 0) {
+		Stack.operators.push(exp[i]);
+		Stack.expression += exp[i];
+		}
+		else if(Object.keys(Stack.opors).includes(exp[i]) && Stack.operators.length === 1) {
+		if(Stack.operators[0] === "+")
+		Stack.expression = new Icy(Stack.expression).addition();
+		if(Stack.operators[0] === "-")
+		Stack.expression = new Icy(Stack.expression).subtraction();
+		Stack.expression = (typeof Stack.expression !== "string") ? `${Stack.expression}` : Stack.expression;
+		//Stack.operators.pop();
+		Stack.expression += exp[i];
+		}
+		else {
+		Stack.expression += exp[i];
 		}
 	}
-return new Icy(expression).substraction();
+		if(Stack.operators[0] === "+")
+		return new Icy(Stack.expression).addition();
+		if(Stack.operators[0] === "-")
+		return new Icy(Stack.expression).subtraction();
+	}
+};
+return Stack.evalexp(expression);
 }
