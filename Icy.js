@@ -6,38 +6,6 @@ class Icy {
     }
     else throw new Error("Invalid Argument");
     }
-	objectify(val) {
-	//arg1: a value of any type
-	//intent: takes a value and creates an object with a single key:value pair
-	//returns: object
-	if((typeof val === "string" && val !== "") || typeof val === "number" || typeof val === "boolean" || val === Infinity || val === NaN) {
-	let key, value;
-	let num = val,
-			 decimalPoint = val.toString().includes("."),
-			 negativeInt = val < 0,
-			specialType = (val === Infinity || val === NaN);
-	if(typeof val === "number") {
-	 if(negativeInt || decimalPoint) {
-		if(negativeInt)
-			num = `${num.toString().replace("-", "minus")}`;
-		if(decimalPoint)
-			num = `${negativeInt ? "" : "_"}${num.toString().replace(".", "dot")}`;
-		}
-		else num = `_${num}`;
-		key = num;
-		}
-	else if(specialType) {
-		key = `_${val}`;
-		}
-	else key = `${val}`;
-	value = val;
-	return { [key]: value };
-	} else {
-		let emptyValue = (val === null) || (val === undefined);
-		if(emptyValue)
-			return{ [`_${val}`]: val };
-	}
-}//objectify()
     performOperation( _operator, operation) {
     //arg1: string
     //arg2: object
@@ -138,13 +106,13 @@ op1_arr_op2_null(op1, op2) {
 	},
 op1_null_op2_obj(op1, op2) {
 	object = op2;
-	item = this.objectify(op1);		
+	item = objectify(op1);		
 	Object.assign(object, item);
 	return object;
 	},
 op1_obj_op2_null(op1, op2) {
 	object = op1;
-	item = this.objectify(op2);
+	item = objectify(op2);
 	Object.assign(object, item);
      return object;
 	},
@@ -170,13 +138,13 @@ op1_arr_op2_undef(op1, op2) {
 	},
 op1_undef_op2_obj(op1, op2) {
 	object = op2;
-	item = this.objectify(op1);		
+	item = objectify(op1);		
 	Object.assign(object, item);
 	return object;
 	},
 op1_obj_op2_undef(op1, op2) {
 	object = op1;
-	item = this.objectify(op2);
+	item = objectify(op2);
 	Object.assign(object, item);
      return object;
 	},
@@ -200,13 +168,13 @@ op1_arr_op2_bool(op1, op2) {
 	},
 op1_bool_op2_obj(op1, op2) {
 	object = op2;
-	item = this.objectify(op1);		
+	item = objectify(op1);		
 	Object.assign(object, item);
 	return object;
 	},
 op1_obj_op2_bool(op1, op2) {
 	object = op1;
-	item = this.objectify(op2);
+	item = objectify(op2);
 	Object.assign(object, item);
      return object;
 	},
@@ -228,13 +196,13 @@ op1_arr_op2_num(op1, op2) {
 	},
 op1_num_op2_obj(op1, op2) {
 	object = op2;
-	item = this.objectify(op1);		
+	item = objectify(op1);		
 	Object.assign(object, item);
 	return object;
 	},
 op1_obj_op2_num(op1, op2) {
 	object = op1;
-	item = this.objectify(op2);
+	item = objectify(op2);
 	Object.assign(object, item);
      return object;
 	},
@@ -254,13 +222,13 @@ op1_arr_op2_str(op1, op2) {
 	},
 op1_str_op2_obj(op1, op2) {
 	object = op2;
-	item = this.objectify(op1);		
+	item = objectify(op1);		
 	Object.assign(object, item);
 	return object;
 	},
 op1_obj_op2_str(op1, op2) {
 	object = op1;
-	item = this.objectify(op2);
+	item = objectify(op2);
 	Object.assign(object, item);
      return object;
 	},
@@ -292,7 +260,7 @@ both_op1_op2_obj(op1, op2) {
 }//operation{}
   return this.performOperation("+", operation);
   }//addition()
-  substraction = () => {
+  subtraction = () => {
   let array, object, item, regex;
   //common methods
   let C = {
@@ -602,35 +570,150 @@ both_op1_op2_obj(op1, op2) {
 }
  function I(expression) {
  let Stack = {
-	opors: {"+":1,"-":1,"/":2,"*":2,"(":0},
-	operands: [],
-	operators: [],
-	expression: "",
-	evalexp(exp) {
-		Stack.expression = "";
-	for(let i = 0; i < exp.length; i++) {
-		if(Object.keys(Stack.opors).includes(exp[i]) && Stack.operators.length === 0) {
-		Stack.operators.push(exp[i]);
-		Stack.expression += exp[i];
+supportedOperators: ["+", "-"],
+precedence: [1, 1],
+operands: [],
+operators: [],
+evalexp(exp) {
+	this.operands = [];
+	this.operators = [];
+	let isOperator;
+	exp = evalparentheses(exp);
+	let tempStoreOperand = "";
+
+	for(let i = 0; i < exp.length; i++) {//for-1
+	isOperator = (this.supportedOperators.includes(exp[i]));
+
+		if(isOperator) {//if-1
+			this.operators.push(exp[i]);
+			if(tempStoreOperand.trim()) {
+				this.operands.push(tempStoreOperand.trim());
+				tempStoreOperand = "";
+			}
+		}//if-1
+		else {//else-1
+			tempStoreOperand += exp[i];
+		}//else-1
+	}//for-1
+
+		if(tempStoreOperand.trim()) {
+			this.operands.push(tempStoreOperand.trim());
+			tempStoreOperand = "";
 		}
-		else if(Object.keys(Stack.opors).includes(exp[i]) && Stack.operators.length === 1) {
-		if(Stack.operators[0] === "+")
-		Stack.expression = new Icy(Stack.expression).addition();
-		if(Stack.operators[0] === "-")
-		Stack.expression = new Icy(Stack.expression).subtraction();
-		Stack.expression = (typeof Stack.expression !== "string") ? `${Stack.expression}` : Stack.expression;
-		//Stack.operators.pop();
-		Stack.expression += exp[i];
-		}
-		else {
-		Stack.expression += exp[i];
-		}
-	}
-		if(Stack.operators[0] === "+")
-		return new Icy(Stack.expression).addition();
-		if(Stack.operators[0] === "-")
-		return new Icy(Stack.expression).subtraction();
-	}
+
+let op, x, y, r, pre;
+while(this.operands.length !== 1) {//while-1
+	op = this.operators.shift();
+	x = this.operands.shift();
+	y = this.operands.shift();
+	x = stringifyCollection(x);
+	y = stringifyCollection(y);
+	//console.log("x: "+x, "y: "+y);
+	r = x + op + y;
+	if(op === "+")
+		r = new Icy(r).addition();
+	if(op === "-")
+		r = new Icy(r).subtraction();
+	this.operands.unshift(r);
+}//while-1
+
+function evalparentheses(expression) {
+  let j, s, e, ap, m = "", a = [], exp = expression;
+  for (let i = 0; i < exp.length; i++) {
+    if(exp[i] === ")") {
+      j = i -1; e = i;
+      while(j !== -1) {
+        if (exp[j] === "(") {
+          s = j;
+          m = reverse(m);
+         //console.log("m: "+ m);
+         if(m.includes("+"))
+         	m = new Icy(m).addition();
+         else if(m.includes("-"))
+         	m = new Icy(m).subtraction();
+         else m = "";
+         if(typeof m === "string")
+         	m = `"${m}"`;
+          m = stringifyCollection(m);
+          m.toString() && a.push(m);
+          if(m.toString()) {
+            ap = a.pop()//.toString();
+            exp = exp.replace(exp.substring(s, e+1), ap);
+          }
+        m = "";
+        a = [];
+        i = 0;
+        break;
+        }
+        m += exp[j];
+        j--;
+      }
+    }
+  }
+
+  function reverse(str) {
+    let revStr = "";
+    for(let k = str.length - 1; k >= 0; k--) revStr += str[k];
+    return revStr;
+  }
+  return exp;
+}
+	if(typeof this.operands[0] === "string")
+		this.operands[0] = eval("("+this.operands[0]+")");
+	return this.operands[0];
+	}//evalexp()
 };
 return Stack.evalexp(expression);
 }
+function stringifyCollection(c) {
+  if(typeof c === "object" && c.length !== undefined)
+	  c = `[${c}]`;//c is an array
+	else if(typeof c === "object" && c.length === undefined) {
+	  //c is an object
+	  let k = Object.keys(c);
+	  let v = Object.values(c);
+	  let s = "";
+	  k.map((key, pos) => {
+		s += key + ":" + v[pos] +",";
+		});
+	  s = s.substring(0, s.length -1);
+	  s = "{" + s;
+	  s += "}";
+	  c = s;
+	}
+	//c is not a collection
+	else c = `${c}`;
+	return c;
+}
+function objectify(val) {
+	//arg1: a value of any type
+	//intent: takes a value and creates an object with a single key:value pair
+	//returns: object
+	if((typeof val === "string" && val !== "") || typeof val === "number" || typeof val === "boolean" || val === Infinity || val === NaN) {
+	let key, value;
+	let num = val,
+			 decimalPoint = val.toString().includes("."),
+			 negativeInt = val < 0,
+			specialType = (val === Infinity || val === NaN);
+	if(typeof val === "number") {
+	 if(negativeInt || decimalPoint) {
+		if(negativeInt)
+			num = `${num.toString().replace("-", "minus")}`;
+		if(decimalPoint)
+			num = `${negativeInt ? "" : "_"}${num.toString().replace(".", "dot")}`;
+		}
+		else num = `_${num}`;
+		key = num;
+		}
+	else if(specialType) {
+		key = `_${val}`;
+		}
+	else key = `${val}`;
+	value = val;
+	return { [key]: value };
+	} else {
+		let emptyValue = (val === null) || (val === undefined);
+		if(emptyValue)
+			return{ [`_${val}`]: val };
+	}
+}//objectify()
